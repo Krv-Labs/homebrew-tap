@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+  HOMEBREW_NO_INSTALL_CLEANUP: "1"
+  # Homebrew 6 requires taps to be trusted before their formulae are usable.
+  HOMEBREW_NO_REQUIRE_TAP_TRUST: "1"
+
+jobs:
+  test-formula:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Homebrew 6 rejects `brew install ./Formula/topos.rb` (formulae must be
+      # in a tap), so check the repo out directly into the tap location.
+      - name: Check out repository as tap
+        uses: actions/checkout@v7
+        with:
+          path: homebrew-tap
+
+      - name: Install tap from checkout
+        run: |
+          TAP_DIR="$(brew --repository)/Library/Taps/krv-labs/homebrew-tap"
+          mkdir -p "$(dirname "$TAP_DIR")"
+          cp -R "$GITHUB_WORKSPACE/homebrew-tap" "$TAP_DIR"
+
+      - name: brew style
+        run: brew style krv-labs/tap/topos
+
+      - name: brew install
+        run: brew install --formula krv-labs/tap/topos
+
+      - name: topos --version
+        run: topos --version
+
+      - name: brew test
+        run: brew test krv-labs/tap/topos
+
+      - name: brew uninstall
+        run: brew uninstall topos
