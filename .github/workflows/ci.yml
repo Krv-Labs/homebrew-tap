@@ -56,9 +56,10 @@ jobs:
       - name: Verify all release assets (dry-run, no install)
         if: github.event_name == 'pull_request' && github.base_ref == 'main' && runner.os == 'macOS'
         run: |
-          for target in "macos arm64" "linux x86_64" "linux arm64"; do
-            set -- $target
-            brew fetch --formula --force --retry krv-labs/tap/topos --os="$1" --arch="$2"
+          for target in "macos:arm64" "linux:x86_64" "linux:arm64"; do
+            os="${target%%:*}"
+            arch="${target##*:}"
+            brew fetch --formula --force --retry krv-labs/tap/topos --os="$os" --arch="$arch"
           done
 
       - run: brew test-bot --only-formulae
@@ -75,3 +76,4 @@ jobs:
           brew install --formula krv-labs/tap/topos
           topos --version
           brew test krv-labs/tap/topos
+
