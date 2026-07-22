@@ -49,6 +49,18 @@ jobs:
 
       - run: brew test-bot --only-tap-syntax
 
+      # Dry-run: download and sha256-verify every platform asset without
+      # installing. Runs from one runner so it also covers linux-arm64, which
+      # no runner installs. Catches a bad/moved URL or wrong checksum from an
+      # auto-generated release bump before it reaches main.
+      - name: Verify all release assets (dry-run, no install)
+        if: github.event_name == 'pull_request' && github.base_ref == 'main' && runner.os == 'macOS'
+        run: |
+          for target in "macos arm64" "linux x86_64" "linux arm64"; do
+            set -- $target
+            brew fetch --formula --force --retry krv-labs/tap/topos --os="$1" --arch="$2"
+          done
+
       - run: brew test-bot --only-formulae
         if: github.event_name == 'pull_request' && runner.os == 'macOS'
 
