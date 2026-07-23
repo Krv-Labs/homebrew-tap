@@ -56,7 +56,10 @@ jobs:
       - name: Verify all release assets (dry-run, no install)
         if: github.event_name == 'pull_request' && github.base_ref == 'main' && runner.os == 'macOS'
         run: |
-          for target in "macos:arm64" "linux:x86_64" "linux:arm64"; do
+          # brew fetch --arch only accepts Homebrew SimulateSystem values:
+          # :arm / :intel (not arm64 / x86_64). Those map to the formula's
+          # on_arm / on_intel blocks and the shipped release assets.
+          for target in "macos:arm" "linux:intel" "linux:arm"; do
             os="${target%%:*}"
             arch="${target##*:}"
             brew fetch --formula --force --retry krv-labs/tap/topos --os="$os" --arch="$arch"
