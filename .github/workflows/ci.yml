@@ -1,0 +1,78 @@
+# Based on Homebrew's official `brew tap-new` workflow template:
+# https://github.com/Homebrew/brew/blob/HEAD/.github/workflows/tap-new-tests.yml
+# Deviations: no macos-15-intel runner (topos ships no Intel macOS binary) and
+# no bottle/GitHub Packages steps (this tap distributes prebuilt release
+# binaries, not bottles).
+name: brew test-bot
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test-bot:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        include:
+          - os: ubuntu-latest
+            container:
+              image: ghcr.io/homebrew/brew:main
+              options: --privileged
+    runs-on: ${{ matrix.os }}
+    container: ${{ fromJSON(toJSON(matrix.container)) }} # zizmor: ignore[unpinned-images]
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@18fcb8e3e06b4247c676c506750dc95ea7226479 # 2026.07.13.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Homebrew Bundler RubyGems
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+          key: ${{ matrix.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+          restore-keys: ${{ matrix.os }}-rubygems-
+
+      - run: brew test-bot --only-cleanup-before
+
+      - run: brew test-bot --only-setup
+
+      - run: brew test-bot --only-tap-syntax
+
+      # Dry-run: download and sha256-verify every platform asset without
+      # installing. Runs from one runner so it also covers linux-arm64, which
+      # no runner installs. Catches a bad/moved URL or wrong checksum from an
+      # auto-generated release bump before it reaches main.
+      - name: Verify all release assets (dry-run, no install)
+        if: github.event_name == 'pull_request' && github.base_ref == 'main' && runner.os == 'macOS'
+        run: |
+          # Homebrew 6+: fetch every OS/arch the formula declares. Distinct
+          # URLs are downloaded once. Covers linux-arm64 without a runner.
+          brew fetch --formula --force --retry --all-platforms krv-labs/tap/topos
+
+      - run: brew test-bot --only-formulae
+        if: github.event_name == 'pull_request' && runner.os == 'macOS'
+
+      # test-bot's formulae stage runs `brew linkage --test`, which fails on
+      # Linuxbrew for prebuilt binaries that intentionally link system
+      # glibc/zlib (the check exists to keep bottles self-contained; this tap
+      # ships release binaries, not bottles). Run the install/test stages
+      # directly instead.
+      - name: Install and test formula (Linux)
+        if: github.event_name == 'pull_request' && runner.os == 'Linux'
+        run: |
+          brew install --formula krv-labs/tap/topos
+          topos --version
+          topos --help | grep -F evaluate
+          brew test krv-labs/tap/topos
+
