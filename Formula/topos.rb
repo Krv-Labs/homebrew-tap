@@ -4,9 +4,9 @@ class Topos < Formula
   # macOS default; Linux URLs are defined in the on_linux block. A top-level
   # URL must exist so `brew readall --os=all --arch=all` can load the formula
   # on Intel macOS, where no binary ships (guarded by depends_on arch below).
-  url "https://github.com/Krv-Labs/topos/releases/download/v0.4.0/topos-macos-arm64"
-  version "0.4.0"
-  sha256 "c4c9d7a44cd1ae8ebfc2c6dbbaf237e18fbd6707b634e07f02942b22fcbe8e1f"
+  url "https://github.com/Krv-Labs/topos/releases/download/v0.4.1/topos-macos-arm64"
+  version "0.4.1"
+  sha256 "b16be83f9dd2b1d67291ea30d6cdb8bdea56d0ee5d82957b5fedcc1870311cfd"
   license "BSD-3-Clause"
 
   livecheck do
@@ -21,12 +21,12 @@ class Topos < Formula
 
   on_linux do
     on_intel do
-      url "https://github.com/Krv-Labs/topos/releases/download/v0.4.0/topos-linux-amd64"
-      sha256 "21d64271e8bb1cc0aafac12213c864ad2b89caa2cbd199250528b7ac7b014505"
+      url "https://github.com/Krv-Labs/topos/releases/download/v0.4.1/topos-linux-amd64"
+      sha256 "ffe5feb4ebb0b77eeda31cedcdb7039ea3780f01df14a03973c9883183210bb3"
     end
     on_arm do
-      url "https://github.com/Krv-Labs/topos/releases/download/v0.4.0/topos-linux-arm64"
-      sha256 "e40b3abf141b247ad7f6daaaa34ce2673297b07271e85e38e9706dc389f4c6ff"
+      url "https://github.com/Krv-Labs/topos/releases/download/v0.4.1/topos-linux-arm64"
+      sha256 "4ed0a97de993c8a16dc82697f668303f87e7539a8e2516d9af47bac8b1973557"
     end
   end
 
