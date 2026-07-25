@@ -87,4 +87,3 @@ class Topos < Formula
     assert_match "evaluate", shell_output("#{bin}/topos --help")
   end
 end
-
