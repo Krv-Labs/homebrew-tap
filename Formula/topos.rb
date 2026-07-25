@@ -33,6 +33,7 @@ class Topos < Formula
     binary = Dir["topos-*"].first
     bin.install binary => "topos"
     (bin/"topos").chmod 0755
+    bundle_openssl_on_macos if OS.mac?
 
     # Homebrew formulae are non-interactive: warn only (no y/N). Formula-level
     # conflict declarations only cover other formulae, not curl/install.sh.
@@ -79,6 +80,45 @@ class Topos < Formula
     candidates.select do |path|
       File.exist?(path) && !path.start_with?("#{HOMEBREW_PREFIX}/")
     end
+  end
+
+  def bundle_openssl_on_macos
+    # Release binaries are Developer ID signed but link Homebrew OpenSSL paths
+    # from the build runner. macOS rejects that Team ID mix at runtime, so ship
+    # matching dylibs beside the binary and re-sign the bundle ad hoc.
+    openssl_lib = formula_opt_lib("openssl@3")
+    dylibs = %w[libssl.3.dylib libcrypto.3.dylib]
+
+    dylibs.each do |lib|
+      cp openssl_lib/lib, bin/lib
+      (bin/lib).chmod 0644
+    end
+
+    targets = [bin/"topos", *dylibs.map { |lib| bin/lib }]
+    targets.each { |target| rewrite_openssl_links(target) }
+
+    dylibs.each do |lib|
+      macho = MachO.open(bin/lib)
+      macho.change_dylib_id("@executable_path/#{lib}")
+      macho.write!
+    end
+
+    system "codesign", "--force", "--sign", "-", *targets
+  end
+
+  def rewrite_openssl_links(target)
+    macho = MachO.open(target)
+    macho.linked_dylibs.each do |dep|
+      next unless dep.include?("openssl")
+
+      new_name = if dep.include?("libssl")
+        "@executable_path/libssl.3.dylib"
+      else
+        "@executable_path/libcrypto.3.dylib"
+      end
+      macho.change_install_name(dep, new_name)
+    end
+    macho.write!
   end
 
   test do
