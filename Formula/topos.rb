@@ -86,38 +86,37 @@ class Topos < Formula
   def bundle_openssl_on_macos
     # Release binaries are Developer ID signed but link Homebrew OpenSSL paths
     # from the build runner. macOS rejects that Team ID mix at runtime, so ship
-    # matching dylibs beside the binary and re-sign the bundle ad hoc.
+    # matching dylibs in libexec, rewrite load paths, and re-sign ad hoc.
     openssl_lib = formula_opt_lib("openssl@3")
     dylibs = %w[libssl.3.dylib libcrypto.3.dylib]
 
+    libexec.mkpath
     dylibs.each do |lib|
-      cp openssl_lib/lib, bin/lib
-      (bin/lib).chmod 0644
+      cp openssl_lib/lib, libexec/lib
+      (libexec/lib).chmod 0644
     end
 
-    targets = [bin/"topos", *dylibs.map { |lib| bin/lib }]
-    targets.each { |target| rewrite_openssl_links(target) }
+    rewrite_openssl_links(bin/"topos", loader_base: "@loader_path/../libexec")
 
     dylibs.each do |lib|
-      macho = MachO.open(bin/lib)
-      macho.change_dylib_id("@executable_path/#{lib}")
+      dylib = libexec/lib
+      rewrite_openssl_links(dylib, loader_base: "@loader_path")
+      macho = MachO.open(dylib)
+      macho.change_dylib_id("@loader_path/#{lib}")
       macho.write!
     end
 
+    targets = [bin/"topos", *dylibs.map { |lib| libexec/lib }]
     system "codesign", "--force", "--sign", "-", *targets
   end
 
-  def rewrite_openssl_links(target)
+  def rewrite_openssl_links(target, loader_base:)
     macho = MachO.open(target)
     macho.linked_dylibs.each do |dep|
       next unless dep.include?("openssl")
 
-      new_name = if dep.include?("libssl")
-        "@executable_path/libssl.3.dylib"
-      else
-        "@executable_path/libcrypto.3.dylib"
-      end
-      macho.change_install_name(dep, new_name)
+      lib_name = dep.include?("libssl") ? "libssl.3.dylib" : "libcrypto.3.dylib"
+      macho.change_install_name(dep, "#{loader_base}/#{lib_name}")
     end
     macho.write!
   end
