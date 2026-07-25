@@ -16,7 +16,6 @@ class Topos < Formula
 
   on_macos do
     depends_on arch: :arm64
-    depends_on "openssl@3"
   end
 
   on_linux do
