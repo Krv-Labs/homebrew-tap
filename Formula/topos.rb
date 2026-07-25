@@ -16,6 +16,7 @@ class Topos < Formula
 
   on_macos do
     depends_on arch: :arm64
+    depends_on "openssl@3"
   end
 
   on_linux do
@@ -86,3 +87,4 @@ class Topos < Formula
     assert_match "evaluate", shell_output("#{bin}/topos --help")
   end
 end
+
