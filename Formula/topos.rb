@@ -7,8 +7,8 @@ class Topos < Formula
   # No explicit `version`: Homebrew scans it from the release tag in the URL
   # (Version::UrlParser for `releases/download/<tag>/`, brew >= 6.0.14). An
   # explicit stanza duplicates that and fails `brew audit` in tap CI.
-  url "https://github.com/Krv-Labs/topos/releases/download/v0.10.1/topos-macos-arm64"
-  sha256 "4f9be370db603a5c53d73f645d267aafb4d930e09f8f0972a40824293c229632"
+  url "https://github.com/Krv-Labs/topos/releases/download/v0.10.2/topos-macos-arm64"
+  sha256 "d8ca6983b482c160aca66b6e0a6919a63dcdc9a090014b498924d919ca3700a3"
   license "BSD-3-Clause"
 
   livecheck do
@@ -23,12 +23,12 @@ class Topos < Formula
 
   on_linux do
     on_intel do
-      url "https://github.com/Krv-Labs/topos/releases/download/v0.10.1/topos-linux-amd64"
-      sha256 "2e2ac2939328f3a5ea648cbb679531fc9eef339aa18df9309e7901616a399e1b"
+      url "https://github.com/Krv-Labs/topos/releases/download/v0.10.2/topos-linux-amd64"
+      sha256 "899d691f7f9b0d7f87645409006a68f214173720964e262aad6ed1b90041b055"
     end
     on_arm do
-      url "https://github.com/Krv-Labs/topos/releases/download/v0.10.1/topos-linux-arm64"
-      sha256 "cdb9880b5c4d7cf1fe34cf4f124f081af40b4ab5ebe560e9e05315a5f8617fa9"
+      url "https://github.com/Krv-Labs/topos/releases/download/v0.10.2/topos-linux-arm64"
+      sha256 "af245ab69c839a409f0d23e171d60ed4735258c86fb6abf5100ea47f5687c080"
     end
   end
 
