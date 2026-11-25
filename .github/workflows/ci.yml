@@ -23,6 +23,10 @@ jobs:
               image: ghcr.io/homebrew/brew:main
               options: --privileged
     runs-on: ${{ matrix.os }}
+    # A healthy run takes 1-5 minutes. Without a limit, a stalled macOS runner
+    # sat in `brew test-bot --only-formulae` for 35 minutes before anyone saw
+    # it (homebrew-tap#23); the default limit is 6 hours.
+    timeout-minutes: 20
     container: ${{ fromJSON(toJSON(matrix.container)) }} # zizmor: ignore[unpinned-images]
     permissions:
       actions: read
